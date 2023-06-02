@@ -31,7 +31,7 @@ func CreateQuiz(c *gin.Context){
 
 	var newQuiz Quiz
 	
-	connectionString := fmt.Sprintf("testms2:%s@tcp(localhost:3306)/quizapp", mysqlCred)
+	connectionString := fmt.Sprintf("root:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlCred)
 
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {

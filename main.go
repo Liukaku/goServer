@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/websocket"
 	"github.com/liukaku/go-server-ws/indexPage"
+	"github.com/liukaku/go-server-ws/initQuiz"
 	"github.com/liukaku/go-server-ws/postData"
 )
 
@@ -47,6 +48,7 @@ func main() {
 	r.GET("/ws", ws)
 	r.GET("/", indexPage.Index)
 	r.POST("/createQuiz", postData.CreateQuiz)
+	r.POST("/initQuiz", initQuiz.InitQuiz)
 	r.Run(bindAddress)
 
 	// r := gin.Default()

@@ -8,6 +8,7 @@ WORKDIR /build
 # COPY * ./
 RUN go mod download
 RUN go install
+RUN touch .env
 
 # RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-go-server
 RUN go build -o /docker-go-server

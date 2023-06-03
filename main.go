@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 	"github.com/liukaku/go-server-ws/indexPage"
 	"github.com/liukaku/go-server-ws/initQuiz"
 	"github.com/liukaku/go-server-ws/postData"
@@ -40,9 +42,17 @@ func ws(c *gin.Context){
 }
 
 func main() {
+	err := godotenv.Load();
+
+	if err != nil {
+		log.Print(".env error")
+	}
+
 	fmt.Println("websocket server start!")
 
-	bindAddress := ":4001"
+	PORT := os.Getenv("PORT")
+
+	bindAddress := fmt.Sprintf(":%s", PORT)
 
 	r:= gin.Default()
 	r.GET("/ws", ws)

@@ -42,7 +42,7 @@ func ws(c *gin.Context){
 func main() {
 	fmt.Println("websocket server start!")
 
-	bindAddress := "localhost:4001"
+	bindAddress := ":4001"
 
 	r:= gin.Default()
 	r.GET("/ws", ws)

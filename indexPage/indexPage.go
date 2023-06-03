@@ -13,7 +13,6 @@ import (
 )
 
 func Index(c *gin.Context){
-	
 	err := godotenv.Load()
 
 	if err != nil {

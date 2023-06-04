@@ -90,7 +90,7 @@ func InitQuiz(c *gin.Context){
 		return
 	}
 
-	_, err = quizInsert.Exec(initQuiz.Quiz_name, lid)
+	dbCreate, err := quizInsert.Exec(initQuiz.Quiz_name, lid)
 
 	if err != nil {
 		log.Print("db quiz insert error")
@@ -101,10 +101,18 @@ func InitQuiz(c *gin.Context){
 		return
 	}
 
+	quizLid, err := dbCreate.LastInsertId()
+
+	if err != nil {
+		log.Print("db last ID error")
+		log.Print(err.Error())
+		return
+	}
+
 	c.JSON(200, gin.H{
 		"message": "success!",
 		"response": initQuiz,
-		"newId": lid,
+		"newId": quizLid,
 	})
 
 

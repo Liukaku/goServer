@@ -57,6 +57,7 @@ func main() {
 	r:= gin.Default()
 	r.GET("/ws", ws)
 	r.GET("/", indexPage.Index)
+	r.GET("/getQuizId/:id", indexPage.GetById)
 	r.POST("/createQuiz", postData.CreateQuiz)
 	r.POST("/initQuiz", initQuiz.InitQuiz)
 	r.Run(bindAddress)

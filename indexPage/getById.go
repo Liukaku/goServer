@@ -48,7 +48,7 @@ func GetById(c *gin.Context){
 	}
 	defer db.Close()
 	log.Print(db)
-	selectPrep, err := db.Prepare("SELECT * FROM Quiz INNER JOIN Sections ON Quiz.id = (?) INNER JOIN Questions ON Sections.quiz_id = Questions.section_id;")
+	selectPrep, err := db.Prepare("SELECT * FROM Quiz INNER JOIN Sections ON Quiz.id = (?) INNER JOIN Questions ON Questions.section_id = Sections.id;")
 
 	if err != nil {
 		log.Print("db prepare error")
@@ -108,7 +108,6 @@ func GetById(c *gin.Context){
 	retArr := []ReturnObj{}
 	for rows.Next() {
 		var ret ReturnObj
-		fmt.Println(ret, " bbb")
 		err = rows.Scan(
 			&ret.Id,
 			&ret.Quiz_title,
@@ -131,6 +130,16 @@ func GetById(c *gin.Context){
 		}
 
 		retArr = append(retArr, ret)
+	}
+
+	type RetObj struct {
+		Id int `json:"id"`
+		Quiz_title string `json:"quiz_title"`
+		Owner_id int `json:"owner_id"`
+	}
+
+	for _, retRow := range retArr {
+		fmt.Println(retRow)
 	}
 
 	c.JSON(200, gin.H{

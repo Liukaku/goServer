@@ -48,7 +48,7 @@ func GetById(c *gin.Context){
 	}
 	defer db.Close()
 	log.Print(db)
-	selectPrep, err := db.Prepare("SELECT * FROM Quiz WHERE id = (?)")
+	selectPrep, err := db.Prepare("SELECT * FROM Quiz INNER JOIN Sections ON Quiz.id = (?) INNER JOIN Questions ON Sections.quiz_id = Questions.section_id;")
 
 	if err != nil {
 		log.Print("db prepare error")
@@ -60,6 +60,7 @@ func GetById(c *gin.Context){
 	}
 
 	rows, err := selectPrep.Query(routeId)
+
 
 	if err != nil {
 		log.Print("db select error")
@@ -80,6 +81,20 @@ func GetById(c *gin.Context){
 		return
 	}
 
+	type ReturnObj struct {
+		Id int `json:"id"`
+		Quiz_title string `json:"quiz_title"`
+		Owner_id int `json:"owner_id"`
+		Section_id int `json:"section_id"`
+		Section_title string `json:"section_title"`
+		Section_background string `json:"section_background"`
+		Quiz_id int `json:"quiz_id"`
+		Question_id int `json:"question_id"`
+		Question_title string `json:"question_title"`
+		Question_background *string `json:"question_background"`
+		Question_type string `json:"question_type"`
+		From_section_id int `json:"from_section_id"`
+	}
 
 	values := make([]sql.RawBytes, len(columns))
 	scanArgs := make([]interface{}, len(values))
@@ -88,41 +103,37 @@ func GetById(c *gin.Context){
 		scanArgs[i] = &values[i]
 	}
 
-	// log.Print(columns)
-	// log.Print(values)
 	defer rows.Close()
-		
 
-	type Quiz struct {
-		Quiz_id string `json:"quiz_id"`
-		Quiz_title string `json:"quiz_title"`
-		Owner_id string `json:"owner_id"`
-	}
-	quizArr := make([]any, 0)
-
+	retArr := []ReturnObj{}
 	for rows.Next() {
-		err = rows.Scan(scanArgs...)
+		var ret ReturnObj
+		fmt.Println(ret, " bbb")
+		err = rows.Scan(
+			&ret.Id,
+			&ret.Quiz_title,
+			&ret.Owner_id,
+			&ret.Section_id,
+			&ret.Section_title,
+			&ret.Section_background,
+			&ret.Quiz_id,
+			&ret.Question_id,
+			&ret.Question_title,
+			&ret.Question_background,
+			&ret.Question_type,
+			&ret.From_section_id,
+		)
+
 		if err != nil {
 			log.Print("db select error")
 			log.Print(err.Error())
 			return
 		}
-		returnObj := make(map[string]string)
-		var value string
-		for i, col := range values {
-			if col == nil {
-				value = "NULL"
-			} else {
-				value = string(col)
-			}
-			returnObj[columns[i]] = value
-			}
 
-			// append to the end of the array
-			quizArr = append(quizArr, returnObj)
-}
+		retArr = append(retArr, ret)
+	}
 
 	c.JSON(200, gin.H{
-		"message": quizArr,
+		"message": retArr,
 	})
 }

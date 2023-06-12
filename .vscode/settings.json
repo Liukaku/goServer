@@ -25,6 +25,19 @@
       "username": "root",
       "database": "quizapp",
       "askForPassword": true
+    },
+    {
+      "mysqlOptions": {
+        "authProtocol": "default"
+      },
+      "previewLimit": 50,
+      "server": "containers-us-west-166.railway.app",
+      "port": 6421,
+      "driver": "MySQL",
+      "name": "railway",
+      "database": "railway",
+      "username": "root",
+      "askForPassword": true
     }
   ]
 }

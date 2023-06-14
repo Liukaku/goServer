@@ -12,6 +12,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
+
+type Sections struct {
+	Id int `json:"section_id"`
+	Section_title string `json:"section_title"`
+	Section_bg string `json:"section_bg"`
+}
+
+type Questions struct {
+	Id int `json:"question_id"`
+	Question_title string `json:"question_title"`
+	Question_bg string `json:"question_bg"`
+	Question_type string `json:"question_type"`
+	Section_id int `json:"from_section_id"`
+}
+
+type RetObj struct {
+	Id int `json:"id"`
+	Quiz_title string `json:"quiz_title"`
+	Owner_id int `json:"owner_id"`
+	Sections []Sections `json:"sections"`
+	Questions []Questions `json:"questions"`
+}
+
 func GetById(c *gin.Context){
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -132,17 +155,42 @@ func GetById(c *gin.Context){
 		retArr = append(retArr, ret)
 	}
 
-	type RetObj struct {
-		Id int `json:"id"`
-		Quiz_title string `json:"quiz_title"`
-		Owner_id int `json:"owner_id"`
+
+	p := RetObj{}
+	q := []Sections{}
+	r := []Questions{}
+
+	fmt.Println(retArr)
+	for _, retRow := range retArr {
+		if !arrayContains(q, retRow.Section_id){
+			q = append(q, Sections{retRow.Section_id, retRow.Section_title, retRow.Section_background})
+		}
+
+		qBg := retRow.Question_background 
+
+		if qBg == nil {
+			fmt.Println("it was nil")
+			var alo = "NULL"
+			qBg = &alo
+		}
+
+		r = append(r, Questions{retRow.Question_id, retRow.Question_title, *qBg , retRow.Question_type, retRow.From_section_id})
 	}
 
-	for _, retRow := range retArr {
-		fmt.Println(retRow)
-	}
+	p = RetObj{retArr[0].Id, retArr[0].Quiz_title, retArr[0].Owner_id, q, r}
 
 	c.JSON(200, gin.H{
-		"message": retArr,
+		"message": p,
 	})
+}
+
+func arrayContains(sections []Sections, secId int)bool{
+
+	for _, section := range sections {
+		if section.Id == secId {
+			return true
+		}
+	}
+
+	return false
 }

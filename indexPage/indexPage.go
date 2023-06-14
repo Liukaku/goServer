@@ -23,9 +23,10 @@ func Index(c *gin.Context){
 
 	mysqlUn := os.Getenv("MYSQL_NAME")
 	mysqlCred := os.Getenv("MYSQL_PWD")
+	mysqlUrl := os.Getenv("DB_URL")
 
-	connectionString := fmt.Sprintf("%s:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlUn, mysqlCred)
-
+	connectionString := fmt.Sprintf("%s:%s@%s", mysqlUn, mysqlCred, mysqlUrl)
+	
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {
 		log.Print("connection error")

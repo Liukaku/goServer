@@ -26,9 +26,10 @@ func InitQuiz(c *gin.Context){
 		return
 	}
 
+	mysqlUn := os.Getenv("MYSQL_NAME")
 	mysqlCred := os.Getenv("MYSQL_PWD")
 
-	connectionString := fmt.Sprintf("root:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlCred)
+	connectionString := fmt.Sprintf("%s:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlUn, mysqlCred)
 
 	db, err := sql.Open("mysql", connectionString)
 

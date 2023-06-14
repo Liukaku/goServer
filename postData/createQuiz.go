@@ -22,8 +22,6 @@ func CreateQuiz(c *gin.Context){
 		return
 	}
 
-	mysqlCred := os.Getenv("MYSQL_PWD")
-
 	type Quiz struct {
 		Quiz_title string `json:"quiz_title"`
 		Owner_id int `json:"owner_id"`
@@ -31,7 +29,10 @@ func CreateQuiz(c *gin.Context){
 
 	var newQuiz Quiz
 	
-	connectionString := fmt.Sprintf("root:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlCred)
+	mysqlUn := os.Getenv("MYSQL_NAME")
+	mysqlCred := os.Getenv("MYSQL_PWD")
+
+	connectionString := fmt.Sprintf("%s:%s@tcp(containers-us-west-166.railway.app:6421)/railway", mysqlUn, mysqlCred)
 
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {

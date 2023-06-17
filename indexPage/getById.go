@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 
 	"log"
 
@@ -15,24 +16,38 @@ import (
 
 type Sections struct {
 	Id int `json:"section_id"`
-	Section_title string `json:"section_title"`
-	Section_bg string `json:"section_bg"`
+	Section_title string `json:"name"`
+	Section_bg string `json:"background"`
 }
 
 type Questions struct {
 	Id int `json:"question_id"`
-	Question_title string `json:"question_title"`
+	Question_title string `json:"questionTitle"`
 	Question_bg string `json:"question_bg"`
-	Question_type string `json:"question_type"`
+	Question_type string `json:"type"`
 	Section_id int `json:"from_section_id"`
+	Order int `json:"order"`
+	Answer []Answers `json:"answer"`
+}
+
+type Answers struct {
+	Id int `json:"id"`
+	AnswerType string `json:"answerType"`
+	Correct bool `json:"correct"`
+	Order int `json:"order"`
+	Title string `json:"title"`
 }
 
 type RetObj struct {
+	Owner Owner `json:"Owner"`
+	Sections map[string]Sections `json:"Sections"`
+	Questions map[string][]Questions `json:"Questions"`
+}
+
+type Owner struct {
+	OwnerName int `json:"ownerName"`
+	QuizName string `json:"quizName"`
 	Id int `json:"id"`
-	Quiz_title string `json:"quiz_title"`
-	Owner_id int `json:"owner_id"`
-	Sections []Sections `json:"sections"`
-	Questions []Questions `json:"questions"`
 }
 
 func GetById(c *gin.Context){
@@ -119,6 +134,7 @@ func GetById(c *gin.Context){
 		Question_background *string `json:"question_background"`
 		Question_type string `json:"question_type"`
 		From_section_id int `json:"from_section_id"`
+		Order int `json:"order"`
 	}
 
 	values := make([]sql.RawBytes, len(columns))
@@ -146,6 +162,7 @@ func GetById(c *gin.Context){
 			&ret.Question_background,
 			&ret.Question_type,
 			&ret.From_section_id,
+			&ret.Order,
 		)
 
 		if err != nil {
@@ -159,13 +176,15 @@ func GetById(c *gin.Context){
 
 
 	p := RetObj{}
-	q := []Sections{}
-	r := []Questions{}
-
+	q := map[string]Sections{}
+	r := map[string][]Questions{}
+	fakeAns := Answers{0, "SINGLE_CHOICE", true, 0, "answer one"}
+	ans := []Answers{fakeAns}
 	fmt.Println(retArr)
 	for _, retRow := range retArr {
-		if !arrayContains(q, retRow.Section_id){
-			q = append(q, Sections{retRow.Section_id, retRow.Section_title, retRow.Section_background})
+		strSecQid := strconv.Itoa(retRow.From_section_id)
+		if _, ok := q[strSecQid]; !ok{
+			q[strSecQid] = Sections{retRow.Section_id, retRow.Section_title, retRow.Section_background}
 		}
 
 		qBg := retRow.Question_background 
@@ -175,10 +194,12 @@ func GetById(c *gin.Context){
 			qBg = &alo
 		}
 
-		r = append(r, Questions{retRow.Question_id, retRow.Question_title, *qBg , retRow.Question_type, retRow.From_section_id})
+		r[strSecQid] = append(r[strSecQid], Questions{retRow.Question_id, retRow.Question_title, *qBg , retRow.Question_type, retRow.From_section_id, retRow.Order, ans})
 	}
 
-	p = RetObj{retArr[0].Id, retArr[0].Quiz_title, retArr[0].Owner_id, q, r}
+	owner := Owner{retArr[0].Owner_id, retArr[0].Quiz_title, retArr[0].Id}
+
+	p = RetObj{owner, q, r}
 
 	c.JSON(200, gin.H{
 		"message": p,

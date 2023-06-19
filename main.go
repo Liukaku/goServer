@@ -13,6 +13,7 @@ import (
 	"github.com/liukaku/go-server-ws/indexPage"
 	"github.com/liukaku/go-server-ws/initQuiz"
 	"github.com/liukaku/go-server-ws/postData"
+	"github.com/liukaku/go-server-ws/postData/createSection"
 )
 
 var upgrader = websocket.Upgrader{
@@ -60,6 +61,7 @@ func main() {
 	r.GET("/getQuizId/:id", indexPage.GetById)
 	r.POST("/createQuiz", postData.CreateQuiz)
 	r.POST("/initQuiz", initQuiz.InitQuiz)
+	r.POST("/sectionEdit", createSection.CreateSection)
 	r.Run(bindAddress)
 
 	// r := gin.Default()

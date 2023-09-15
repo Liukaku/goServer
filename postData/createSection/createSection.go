@@ -69,7 +69,7 @@ func handleErr (err error, c *gin.Context){
 }
 
 func createNewSection(reqBody map[string]string, c *gin.Context){
-
+	
 }
 
 func editSection(reqBody map[string]string, c *gin.Context){

@@ -13,6 +13,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TO DO:
+// separate out the stucts to a different file
+// break out a lot into helper functions so it's not one mega function
+// 	^^--that will make it so much easier to ready this bastard file
+
 
 type Sections struct {
 	Id int `json:"section_id"`
@@ -88,7 +93,7 @@ func GetById(c *gin.Context){
 	}
 	defer db.Close()
 	log.Print(db)
-	selectPrep, err := db.Prepare("SELECT * FROM Quiz INNER JOIN Sections ON Quiz.id = (?) INNER JOIN Questions ON Questions.section_id = Sections.id;")
+	selectPrep, err := db.Prepare("SELECT * FROM Quiz LEFT OUTER JOIN Sections ON Sections.quiz_id = Quiz.id LEFT OUTER JOIN Questions ON Questions.section_id = Sections.id WHERE Quiz.id = (?);")
 
 	if err != nil {
 		log.Print("db prepare error")
@@ -103,7 +108,7 @@ func GetById(c *gin.Context){
 
 
 	if err != nil {
-		log.Print("db select error")
+		log.Print("db select error 1")
 		log.Print(err.Error())
 		c.JSON(500, gin.H{
 			"response": "db select error",
@@ -113,28 +118,28 @@ func GetById(c *gin.Context){
 
 	columns, err:= rows.Columns()
 	if err != nil {
-		log.Print("db select error")
+		log.Print("db select error 2")
 		log.Print(err.Error())
 		c.JSON(500, gin.H{
 			"response": "db select error",
 		})
 		return
 	}
-
+	
 	type ReturnObj struct {
 		Id int `json:"id"`
 		Quiz_title string `json:"quiz_title"`
 		Owner_id int `json:"owner_id"`
-		Section_id int `json:"section_id"`
-		Section_title string `json:"section_title"`
-		Section_background string `json:"section_background"`
-		Quiz_id int `json:"quiz_id"`
-		Question_id int `json:"question_id"`
-		Question_title string `json:"question_title"`
-		Question_background *string `json:"question_background"`
-		Question_type string `json:"question_type"`
-		From_section_id int `json:"from_section_id"`
-		Order int `json:"order"`
+		Section_id sql.NullInt16 `json:"section_id"`
+		Section_title sql.NullString `json:"section_title"`
+		Section_background sql.NullString `json:"section_background"`
+		Quiz_id sql.NullInt64 `json:"quiz_id"`
+		Question_id sql.NullInt64 `json:"question_id"`
+		Question_title sql.NullString `json:"question_title"`
+		Question_background sql.NullString `json:"question_background"`
+		Question_type sql.NullString `json:"question_type"`
+		From_section_id sql.NullInt64 `json:"from_section_id"`
+		Order sql.NullInt64 `json:"order"`
 	}
 
 	values := make([]sql.RawBytes, len(columns))
@@ -166,7 +171,7 @@ func GetById(c *gin.Context){
 		)
 
 		if err != nil {
-			log.Print("db select error")
+			log.Print("db select error 3")
 			log.Print(err.Error())
 			return
 		}
@@ -174,27 +179,30 @@ func GetById(c *gin.Context){
 		retArr = append(retArr, ret)
 	}
 
-
 	p := RetObj{}
 	q := map[string]Sections{}
 	r := map[string][]Questions{}
-	fakeAns := Answers{0, "SINGLE_CHOICE", true, 0, "answer one"}
+	fakeAns := Answers{0, "SINGLE_CHOICE", true, 0, "answer one12"}
 	ans := []Answers{fakeAns}
 	fmt.Println(retArr)
 	for _, retRow := range retArr {
-		strSecQid := strconv.Itoa(retRow.From_section_id)
-		if _, ok := q[strSecQid]; !ok{
-			q[strSecQid] = Sections{retRow.Section_id, retRow.Section_title, retRow.Section_background}
+		secId := retRow.From_section_id
+		var setSecId int
+		
+		// if section id is valid that means there are sections and questions, so go ahead and populate the structs
+		// if there aren't then don't
+		// any questions aren't valid as they should be deleted with the sections so don't worry about that 
+		if secId.Valid {
+			setSecId = int(secId.Int64)
+			strSecQid := strconv.Itoa(int(setSecId))
+			if _, ok := q[strSecQid]; !ok{
+				q[strSecQid] = Sections{setSecId, retRow.Section_title.String, retRow.Section_background.String}
+			}
+	
+			qBg := retRow.Question_background 
+	
+			r[strSecQid] = append(r[strSecQid], Questions{int(retRow.Question_id.Int64), retRow.Question_title.String, qBg.String , retRow.Question_type.String, setSecId, int(retRow.Order.Int64), ans})
 		}
-
-		qBg := retRow.Question_background 
-
-		if qBg == nil {
-			var alo = "NULL"
-			qBg = &alo
-		}
-
-		r[strSecQid] = append(r[strSecQid], Questions{retRow.Question_id, retRow.Question_title, *qBg , retRow.Question_type, retRow.From_section_id, retRow.Order, ans})
 	}
 
 	owner := Owner{retArr[0].Owner_id, retArr[0].Quiz_title, retArr[0].Id}
